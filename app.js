@@ -2,6 +2,7 @@
 const mysql = require("mysql"); // Import the MySQL module for database connection
 const express = require("express"); // Import the Express module for creating a web server
 const bodyParser = require("body-parser");
+const e = require("express");
 
 // Create an Express app instance
 const app = express();
@@ -39,19 +40,25 @@ myConnection.connect((err) => {
 app.get("/createtable", (req, res) => {
   // Define the SQL queries to create the tables
   let products = `CREATE TABLE IF NOT EXISTS Products(
-    product_id INT AUTO_INCREMENT,
+    product_id INT(11) NOT NULL,
     product_name VARCHAR(255) NOT NULL,
     PRIMARY KEY (product_id)
   )`;
 
   let company = `CREATE TABLE IF NOT EXISTS Company(
-    company_id INT AUTO_INCREMENT,
-    product_id INT(11) NOT NULL,
+    company_id INT(11) AUTO_INCREMENT,
+    product_id INT(11),
     company_name VARCHAR(255) NOT NULL,
     company_address VARCHAR(255) NOT NULL,
     PRIMARY KEY (company_id),
     FOREIGN KEY (product_id) REFERENCES Products (product_id)
   )`;
+
+  let description = `CREATE TABLE IF NOT EXISTS Description(
+  product_id INT(11) NOT NULL,
+  company_description VARCHAR(255),
+  FOREIGN KEY (product_id) REFERENCES Products (product_id)
+)`;
 
   // Execute the SQL queries to create the tables
   myConnection.query(products, (err, results, fields) => {
@@ -66,7 +73,13 @@ app.get("/createtable", (req, res) => {
     }
   });
 
+  myConnection.query(description, (err, results, fields) => {
+    if (err) {
+      console.log(err);
+    }
+  });
   // Send the response message to the client
+
   res.end("table created");
 });
 
@@ -76,12 +89,20 @@ app.post("/additems", (req, res) => {
   // res.send("its working...");
 
   //store the parsed items into variable from body object that store as json format
-  const { product_id, product_name, company_name, company_address } = req.body;
+  const {
+    product_id,
+    product_name,
+    company_name,
+    company_address,
+    company_description,
+  } = req.body;
   // console.table(req.body);
 
   let addProducts = `INSERT INTO products (product_id, product_name) VALUES (?, ?)`;
 
   let addCompany = `INSERT INTO company (product_id, company_name, company_address) VALUES (?, ?, ?)`;
+
+  let addDescription = `INSERT INTO description (product_id, company_description) VALUES (?, ?)`;
 
   myConnection.query(
     addProducts,
@@ -90,7 +111,7 @@ app.post("/additems", (req, res) => {
       if (err) {
         console.log(err);
       } else {
-        console.log("1 record inserted");
+        console.log("record inserted on product table");
       }
     }
   );
@@ -102,10 +123,21 @@ app.post("/additems", (req, res) => {
       if (err) {
         console.log(err);
       } else {
-        console.log("1 record inserted");
+        console.log("record inserted on company table");
       }
     }
   );
 
-  // res.end("its working");
+  myConnection.query(
+    addDescription,
+    [product_id, company_description],
+    (err, results) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log("record inserted on description table");
+      }
+    }
+  );
+  res.end("data inserted...");
 });
