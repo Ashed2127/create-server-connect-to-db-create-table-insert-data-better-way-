@@ -56,8 +56,10 @@ app.get("/createtable", (req, res) => {
 
   let description = `CREATE TABLE IF NOT EXISTS Description(
   product_id INT(11) NOT NULL,
+  company_id INT(11) AUTO_INCREMENT,
   company_description VARCHAR(255),
-  FOREIGN KEY (product_id) REFERENCES Products (product_id)
+  FOREIGN KEY (product_id) REFERENCES Products (product_id),
+  FOREIGN KEY (company_id) REFERENCES Company (company_id)
 )`;
 
   // Execute the SQL queries to create the tables
